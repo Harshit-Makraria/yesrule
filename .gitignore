@@ -16,3 +16,4 @@ dist/
 engine/src/yesrule/web/dist/
 dashboard/test-results/
 dashboard/playwright-report/
+*.tsbuildinfo
