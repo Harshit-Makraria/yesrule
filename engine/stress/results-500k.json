@@ -1,0 +1,15 @@
+{
+  "cases": 500000,
+  "seed": 1,
+  "passed": 500000,
+  "failed": 0,
+  "seconds": 6.1,
+  "by_kind": {
+    "case_decide": 300000,
+    "case_miner": 50000,
+    "case_audit": 90000,
+    "case_redact": 40000,
+    "case_service": 20000
+  },
+  "failures": []
+}

@@ -1,0 +1,16 @@
+# docker compose up  →  dashboard and API at http://localhost:8787
+services:
+  yesrule:
+    build: ./engine
+    ports: ["8787:8787"]
+    volumes: ["yesrule-data:/data"]
+    environment:
+      # Postgres instead of SQLite: YESRULE_DATABASE_URL=postgresql+psycopg://user:pass@db/yesrule
+      YESRULE_TELEGRAM_TOKEN: ${YESRULE_TELEGRAM_TOKEN:-}
+      YESRULE_TELEGRAM_CHAT_ID: ${YESRULE_TELEGRAM_CHAT_ID:-}
+      YESRULE_TELEGRAM_SECRET: ${YESRULE_TELEGRAM_SECRET:-}
+      YESRULE_SLACK_BOT_TOKEN: ${YESRULE_SLACK_BOT_TOKEN:-}
+      YESRULE_SLACK_CHANNEL: ${YESRULE_SLACK_CHANNEL:-}
+      YESRULE_SLACK_SIGNING_SECRET: ${YESRULE_SLACK_SIGNING_SECRET:-}
+volumes:
+  yesrule-data:

@@ -154,23 +154,88 @@ Interactive API docs are generated automatically at `/docs`.
 
 ---
 
-## Tests so far
+## Step 6: Channels, redaction and webhooks (2026-11-24)
 
-`uv run pytest`: **30 passed**. `uv run ruff check`: clean.
+- `core/redact.py` strips API keys (Anthropic, OpenAI, GitHub, Slack, AWS), bearer tokens, private keys, card numbers and `password=` pairs before **any** text leaves the server.
+- `channels.py` covers both chat channels:
+  - **Telegram:** a message with ✅ Approve and ❌ Deny buttons. Button presses come back to `/v1/channels/telegram/webhook` and are accepted only with the secret header.
+  - **Slack:** Block Kit buttons. Presses come back to `/v1/channels/slack/actions`, with the HMAC signature checked and requests older than 5 minutes rejected, which blocks replay.
+- A broken channel never breaks the agent's request. It's logged and skipped.
 
-| File | What it checks |
+## Step 7: More engine features (2026-11-24)
+
+- **Two-person rule:** `approvals_needed` (1–5). Approvals count only from distinct people, and any deny ends the request.
+- **Drift watch:** `POST /v1/requests/{id}/flag` marks an automatic approval as wrong. It's recorded as a human denial and the rule is paused, and that denial then blocks the same rule being proposed again.
+- **Hard lines** API (validated), rule **backtest** endpoint, **insights**, **monthly client report**, audit listing, request detail with every decision.
+
+## Step 8: Adapters (2026-11-24)
+
+| Adapter | How it works |
 |---|---|
-| `tests/test_api.py` (5) | new requests wait for a human with reasons; first decision wins; **the full loop**: 40 human approvals over 4 days → rule proposed → does nothing until accepted → accepted → next request auto-approved with a receipt naming the rule and who accepted it → amounts above the learned cap still ask a human; audit verify detects direct database tampering; expired requests can't be approved |
+| **Claude Code hook** (`adapters/claude_code.py`) | Checked against the official hooks docs: stdin JSON in, `hookSpecificOutput.permissionDecision` out. Maps Bash, Write, Edit and MCP tools to requests, and spots dangerous shell commands and production hints. Low risk goes to the native prompt, and a PostToolUse hook records that local approval as training data. Medium and high risk wait for a remote answer. **Engine down, timeout or error leads to no output, so Claude Code's own prompt appears. It never silently allows.** |
+| **Installer** | `yesrule install claude-code [--dry-run] [--remove] [--scope user\|project]`. It's a pure function: it leaves other hooks untouched, is idempotent, backs up settings first, and `--remove` restores the original exactly (tested). |
+| **MCP server** (`adapters/mcp_server.py`) | Uses MCP SDK 2.x (`MCPServer`; FastMCP was renamed, which we found when the import failed). Tools: `request_approval` (blocking), `check_approval`, `list_pending`, `explain_rules`. If the engine is unreachable it tells the agent **not** to proceed. |
+| **Python SDK** (`sdk.py`) | `submit`, `wait`, `require` and the `@guard` decorator. **Bug found by tests:** `require(timeout=0)` treated 0 as "not set" and waited 600 seconds, which hung the test run. Fixed with an explicit `is not None` check. |
+| **n8n node** (`integrations/n8n-nodes-yesrule`) | TypeScript, compiled against real `n8n-workflow` types. Two outputs (Approved and Denied), polls until a final answer, input values clamped to valid ranges. |
+| **Importer** (`importer.py`) | Generic JSON or an n8n executions export (finds Send-and-Wait approval nodes). |
+| **CLI** | `serve`, `hook`, `install`, `mcp`, `audit verify`, `import`, `demo`, `mine`. |
 
-| File | What it checks |
+## Step 9: Dashboard (2026-11-24)
+
+A single page served by the engine at `/`, with no separate frontend build, so `docker compose up` is the whole product. Tabs: **Inbox** (approve or deny, risk reasons, live refresh), **History** (with a "Wrong" button on automatic approvals), **Rules** (accept, pause, dismiss, backtest, evidence, strict or early mode), **Hard lines**, **Insights**, **Audit** (chain status in the header). Light and dark mode, and every value is HTML-escaped. The JavaScript is syntax-checked with `node --check`.
+
+**Live check:**
+- `yesrule demo` → 205 decisions
+- `yesrule mine` → 3 rules, one per client's invoices, each with about 60 approvals and a Wilson bound around 0.94. Cold outreach to unknown leads correctly got **no** rule.
+- Dashboard returns 200.
+- Hook with `ls` → native prompt. Hook with `npm publish` and nobody answering → native prompt. Hook with the engine down → native prompt.
+
+## Step 10: Packaging (2026-11-24)
+
+Dockerfile (with a healthcheck and a data volume), `docker-compose.yml`, `.env.example`, GitHub Actions CI (lint, tests, a 100k-case fuzz run with a new seed every run, n8n build and test, Docker build), MIT licence, README.
+
+Docker Desktop wasn't running on this machine, so the image build wasn't run locally. CI builds it.
+
+## Step 11: 500,000-case property test (2026-11-24)
+
+`engine/stress/fuzz.py` generates random requests, rules (all statuses and effects, 0–3 conditions), hard lines, decision histories and audit chains, then checks invariants. Every case can be replayed from (seed, case number) with `--replay`.
+
+| Kind | Cases | Invariants |
+|---|---|---|
+| Decision engine | 300,000 | score is the capped sum of reasons; band matches the score; deterministic; hard line → person; high risk never auto-approved; auto-approve only through a matching active rule with nothing blocking it; matching deny rule → deny; inactive rules never change the verdict; empty rules never match; risk never falls when the amount rises |
+| Rule miner | 50,000 | proposals are only `proposed`; never match a past denial; enough approvals; confidence above the threshold; amount bound never wider than what was approved |
+| Audit chain | 90,000 | valid chains verify; edit, delete, reorder and forged hash are all detected |
+| Redaction and callbacks | 40,000 | generated secrets never survive; callback round-trips; garbage input never crashes |
+| Full service and database | 20,000 | real SQLite: high risk never auto-approved; first decision wins; audit chain valid after mining and accepting rules |
+
+**Results:**
+- seed 1: **500,000 passed, 0 failed** (6.1 s on 10 cores)
+- seed 2: **500,000 passed, 0 failed** (6.3 s)
+
+**The harness found a bug in itself first:** the monotonic-amount check compared a score that included the agent's denial rate with one that didn't. It was fixed in the test, and the engine was correct.
+
+**Proving the harness can fail (mutation test):** I planted bugs in a scratch copy of the engine, never the real files, and ran 20,000 cases against each:
+
+| Planted bug | Caught |
 |---|---|
-| `tests/test_core.py` (15) | risk bands and reasons, the money limit, dangerous shell commands, rule matching, proposed rules never firing, high risk beating approve rules, hard lines beating everything, deny beating approve, the audit chain detecting edits and deletions |
-| `tests/test_miner.py` (10) | Wilson bound values, 35 approvals needed at 0.90, proposals created only as `proposed`, the tightest amount bound, too few approvals, any denial blocking a proposal, single-day groups rejected, suggest-early mode, the backtest catching a widened rule, separate clients getting separate rules |
+| High-risk guard removed | 309 failures |
+| Hard lines ignored | 233 |
+| Audit hash check skipped | 896 |
+| Redaction disabled | 1,600 |
+| First-decision-wins removed | 800 |
+| Risk cap removed | 996 |
+| Miner's denial check **and** backtest both removed | 273 |
+
+Removing only one of the miner's two checks is caught by neither, which is correct: each check alone still blocks unsafe rules. That confirms the two layers really are independent.
 
 ---
 
-## Next
+## Final status
 
-- Step 6: Claude Code PreToolUse hook + installer (`--dry-run`, `--remove`)
-- Step 7: Telegram channel with Approve/Deny buttons
-- Step 8: basic web inbox
+| Check | Result |
+|---|---|
+| `pytest` (engine) | **61 passed** |
+| `ruff` | clean |
+| n8n node tests | **3 passed**, type-checks against n8n |
+| Property test | **1,000,000 cases (2 × 500k), 0 failures** |
+| Mutation check | 7/7 planted bugs caught |

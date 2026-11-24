@@ -2,10 +2,12 @@
 
 import logging
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -95,6 +97,10 @@ def create_app(database_url: str | None = None, channels: list[Channel] | None =
             raise HTTPException(409, str(e)) from e
 
     # --- requests -------------------------------------------------------
+
+    @app.get("/", include_in_schema=False)
+    def dashboard() -> FileResponse:
+        return FileResponse(Path(__file__).parent / "web" / "index.html")
 
     @app.get("/health")
     def health() -> dict[str, Any]:

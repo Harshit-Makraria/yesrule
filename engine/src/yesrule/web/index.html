@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yesrule</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1b1b1a;--muted:#6b6b66;--line:#e6e5e0;--ok:#1f7a4d;--okbg:#e6f4ec;--bad:#b42318;--badbg:#fdecea;--warn:#9a6700;--warnbg:#fff4d6;--accent:#3346d3}
+@media (prefers-color-scheme:dark){:root{--bg:#121211;--card:#1c1c1a;--ink:#ecebe6;--muted:#9b9a93;--line:#2e2d2a;--okbg:#12301f;--badbg:#3a1512;--warnbg:#33290d;--accent:#8c9bff}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+header{display:flex;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;flex-wrap:wrap}
+header b{font-size:16px}nav{display:flex;gap:4px;flex-wrap:wrap}nav button{border:0;background:none;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--bg);color:var(--ink);font-weight:600}.badge{background:var(--bad);color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-left:4px}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:200px}.muted{color:var(--muted)}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600}.low{background:var(--okbg);color:var(--ok)}.medium{background:var(--warnbg);color:var(--warn)}.high{background:var(--badbg);color:var(--bad)}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:7px;cursor:pointer;font:inherit}.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}.btn.bad{color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.stat b{display:block;font-size:24px}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:500;font-size:12px}
+.empty{text-align:center;padding:40px;color:var(--muted)}input,select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<header><b>✅ Yesrule</b>
+<nav id="nav"></nav><span class="grow"></span><span id="chain" class="muted mono"></span></header>
+<main id="view"></main>
+<script>
+const TABS=[["inbox","Inbox"],["history","History"],["rules","Rules"],["lines","Hard lines"],["insights","Insights"],["audit","Audit"]];
+let tab=(location.hash||"#inbox").slice(1);
+const $=s=>document.querySelector(s);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api=async(p,o={})=>{const r=await fetch(p,{headers:{"content-type":"application/json"},...o});if(!r.ok)throw new Error((await r.json()).detail||r.status);return r.json()};
+const band=(b,s)=>`<span class="pill ${esc(b)}">${esc(s??b)}</span>`;
+const ago=t=>{const s=(Date.now()-new Date(t))/1000;return s<60?`${s|0}s ago`:s<3600?`${s/60|0}m ago`:s<86400?`${s/3600|0}h ago`:`${s/86400|0}d ago`};
+async function nav(){const p=await api("/v1/requests?status=pending").catch(()=>[]);
+$("#nav").innerHTML=TABS.map(([k,l])=>`<button class="${k==tab?"on":""}" onclick="go('${k}')">${l}${k=="inbox"&&p.length?`<span class="badge">${p.length}</span>`:""}</button>`).join("");
+const a=await api("/v1/audit/verify").catch(()=>null);$("#chain").textContent=a?(a.ok?`audit chain OK · ${a.entries} entries`:`⚠ audit chain broken at #${a.first_bad_seq}`):"engine offline"}
+function go(k){tab=k;location.hash=k;render()}
+async function decide(id,ok){try{await api(`/v1/requests/${id}/decision`,{method:"POST",body:JSON.stringify({approved:ok,by:"owner",channel:"web"})})}catch(e){alert(e.message)}render()}
+async function ruleAct(id,a){await api(`/v1/rules/${id}/${a}`,{method:"POST"});render()}
+async function flag(id){await api(`/v1/requests/${id}/flag`,{method:"POST",body:"{}"}).catch(e=>alert(e.message));render()}
+async function mine(){const r=await api("/v1/rules/mine?min_confidence="+$("#conf").value,{method:"POST"});render();setTimeout(()=>alert(r.length?`${r.length} new rule(s) proposed`:"No new rules yet. More consistent decisions needed."),50)}
+async function backtest(id){const r=await api(`/v1/rules/${id}/backtest`);alert(`Against ${r.history_size} past decisions:\nwould auto-approve ${r.would_auto_approve}\nwould have approved ${r.matched_past_denials} that you denied\n${r.passed?"PASSED":"FAILED"}`)}
+async function addLine(){const f=$("#lf").value,o=$("#lo").value;let v=$("#lv").value;if(v==="true")v=true;else if(v==="false")v=false;else if(v!==""&&!isNaN(v))v=Number(v);
+await api("/v1/hard-lines",{method:"POST",body:JSON.stringify({id:"H-"+Date.now().toString(36),description:$("#ld").value||`${f} ${o} ${v}`,conditions:[{field:f,op:o,value:v}]})}).catch(e=>alert(e.message));render()}
+async function delLine(id){await api("/v1/hard-lines/"+id,{method:"DELETE"});render()}
+const V={
+async inbox(){const rs=await api("/v1/requests?status=pending");if(!rs.length)return`<div class="card empty">Nothing waiting. Agents are either idle or covered by your rules.</div>`;
+const ds=await Promise.all(rs.map(r=>api(`/v1/requests/${r.id}/detail`)));
+return ds.map(d=>{const p=d.payload,ctx=p.context||{};return`<div class="card"><div class="row"><div class="grow"><b>${esc(d.agent)}</b> wants to <b>${esc(d.action)}</b> ${band(d.risk_band,`risk ${d.risk}`)}
+<div class="muted">${esc(p.platform)}${d.client?" · client "+esc(d.client):""} · ${ago(d.created_at)} · expires ${ago(d.expires_at).replace(" ago","")}</div></div>
+<button class="btn ok" onclick="decide('${d.id}',true)">Approve</button><button class="btn bad" onclick="decide('${d.id}',false)">Deny</button></div>
+${p.amount?`<div>Amount: <b>${p.amount.value.toLocaleString()} ${esc(p.amount.currency)}</b></div>`:""}
+${p.recipient?`<div>To: ${esc(p.recipient.id)} ${p.recipient.known?"(known)":"<b>(new)</b>"}</div>`:""}
+${ctx.command?`<div class="mono">$ ${esc(ctx.command)}</div>`:""}${ctx.summary?`<div>${esc(ctx.summary)}</div>`:""}
+<div class="muted">Why: ${d.risk_reasons.map(r=>esc(r[0])+" (+"+r[1]+")").join(", ")||"no rule covers this yet"} · ${esc(d.reason)}${d.approvals_needed>1?` · needs ${d.approvals_needed} approvals`:""}</div></div>`}).join("")},
+async history(){const rs=(await api("/v1/requests?limit=300")).filter(r=>r.status!="pending");if(!rs.length)return`<div class="card empty">No decisions yet.</div>`;
+return`<div class="card scroll"><table><tr><th>When</th><th>Agent</th><th>Action</th><th>Client</th><th>Risk</th><th>Result</th><th></th></tr>${rs.map(r=>`<tr><td class="muted">${ago(r.created_at)}</td><td>${esc(r.agent)}</td><td>${esc(r.action)}${r.amount?` · ${r.amount.toLocaleString()}`:""}</td><td>${esc(r.client||"")}</td><td>${band(r.risk_band,r.risk)}</td>
+<td>${esc(r.status.replace("_"," "))}${r.rule_id?` <span class="muted mono">by ${esc(r.rule_id)}</span>`:""}</td><td>${r.status=="auto_approved"?`<button class="btn bad" onclick="flag('${r.id}')">Wrong</button>`:""}</td></tr>`).join("")}</table></div>`},
+async rules(){const rs=await api("/v1/rules");const head=`<div class="card row"><div class="grow">Rules are learned from your own decisions and only work after you accept them.</div>
+<select id="conf"><option value="0.9">Strict (≥90% confidence)</option><option value="0.8">Suggest early (≥80%)</option></select><button class="btn ok" onclick="mine()">Find rules now</button></div>`;
+if(!rs.length)return head+`<div class="card empty">No rules yet. Keep deciding and Yesrule will spot the patterns.</div>`;
+return head+rs.map(r=>{const e=r.evidence||{};return`<div class="card"><div class="row"><div class="grow"><b>${esc(r.id)}</b> · ${esc(r.description)} ${band(r.status=="active"?"low":r.status=="proposed"?"medium":"high",r.status)}</div>
+${r.status!="active"?`<button class="btn ok" onclick="ruleAct('${r.id}','accept')">Accept</button>`:`<button class="btn" onclick="ruleAct('${r.id}','pause')">Pause</button>`}
+<button class="btn" onclick="backtest('${r.id}')">Backtest</button><button class="btn bad" onclick="ruleAct('${r.id}','dismiss')">Dismiss</button></div>
+<div class="mono muted">${r.conditions.map(c=>`${esc(c.field)} ${esc(c.op)} ${esc(JSON.stringify(c.value))}`).join(" AND ")}</div>
+<div>Evidence: <b>${e.approvals??"?"}</b> approvals, ${e.denials??0} denials, over ${e.days??"?"} days · confidence ${e.wilson_lower_bound??"?"} · fired ${r.fire_count}×${r.accepted_by?` · accepted by ${esc(r.accepted_by)}`:""}</div></div>`}).join("")},
+async lines(){const ls=await api("/v1/hard-lines");return`<div class="card"><b>Hard lines</b> always go to a person, whatever the rules say.<div class="row" style="margin-top:10px">
+<input id="lf" placeholder="field e.g. amount.value"><select id="lo">${["eq","ne","gte","lte","in","contains"].map(o=>`<option>${o}</option>`).join("")}</select><input id="lv" placeholder="value"><input id="ld" class="grow" placeholder="description"><button class="btn ok" onclick="addLine()">Add</button></div></div>
+${ls.map(l=>`<div class="card row"><div class="grow"><b>${esc(l.description)}</b><div class="mono muted">${l.conditions.map(c=>`${esc(c.field)} ${esc(c.op)} ${esc(JSON.stringify(c.value))}`).join(" AND ")}</div></div><button class="btn bad" onclick="delLine('${l.id}')">Remove</button></div>`).join("")||`<div class="card empty">No hard lines yet. Try: amount.value gte 100000</div>`}`},
+async insights(){const i=await api("/v1/insights");const s=(l,v)=>`<div class="card stat"><span class="muted">${l}</span><b>${v}</b></div>`;
+return`<div class="stats">${s("Requests",i.total_requests)}${s("Handled by rules",Math.round(i.automation_rate*100)+"%")}${s("Minutes saved (est.)",i.minutes_saved_estimate)}${s("Median response",i.median_response_ms==null?"–":(i.median_response_ms/1000).toFixed(0)+"s")}${s("Active rules",i.rules.active)}${s("Proposed rules",i.rules.proposed)}</div>
+<div class="card scroll"><table><tr><th>Agent</th><th>Requests</th><th>Automatic</th><th>Denied</th></tr>${Object.entries(i.agents).map(([a,v])=>`<tr><td>${esc(a)}</td><td>${v.requests}</td><td>${v.auto}</td><td>${v.denied}</td></tr>`).join("")}</table></div>`},
+async audit(){const [v,es]=await Promise.all([api("/v1/audit/verify"),api("/v1/audit?limit=200")]);
+return`<div class="card">${v.ok?"✅ Hash chain verified":"⚠ Chain broken at entry #"+v.first_bad_seq} · ${v.entries} entries. Every entry includes the hash of the one before, so edits or deletions are detected.</div>
+<div class="card scroll"><table><tr><th>#</th><th>Event</th><th>Data</th><th>Hash</th></tr>${es.map(e=>`<tr><td>${e.seq}</td><td>${esc(e.event)}</td><td class="mono">${esc(JSON.stringify(e.data)).slice(0,160)}</td><td class="mono muted">${e.hash.slice(0,12)}…</td></tr>`).join("")}</table></div>`}};
+async function render(){await nav();try{$("#view").innerHTML=await V[tab]()}catch(e){$("#view").innerHTML=`<div class="card empty">Could not reach the engine: ${esc(e.message)}</div>`}}
+window.onhashchange=()=>{tab=(location.hash||"#inbox").slice(1);render()};render();setInterval(()=>{if(tab=="inbox"&&!document.hidden)render()},5000);
+</script>
+</body>
+</html>

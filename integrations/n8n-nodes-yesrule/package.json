@@ -1,0 +1,26 @@
+{
+  "name": "n8n-nodes-yesrule",
+  "version": "0.2.0",
+  "description": "n8n community node: ask Yesrule for approval before a step runs. Learns rules from your decisions.",
+  "keywords": ["n8n-community-node-package", "approval", "human-in-the-loop", "ai-agents"],
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node --test dist/test/logic.test.js"
+  },
+  "files": ["dist"],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": ["dist/credentials/YesruleApi.credentials.js"],
+    "nodes": ["dist/nodes/Yesrule/Yesrule.node.js"]
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "n8n-workflow": "^1.82.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
