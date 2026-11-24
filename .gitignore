@@ -9,3 +9,10 @@ node_modules/
 .next/
 dist/
 *.png
+
+# docs screenshots are tracked
+!docs/img/*.png
+# dashboard build output is served by the engine
+engine/src/yesrule/web/dist/
+dashboard/test-results/
+dashboard/playwright-report/

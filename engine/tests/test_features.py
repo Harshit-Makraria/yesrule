@@ -116,4 +116,4 @@ def test_list_filters_and_audit_listing(app_client):
 
 def test_dashboard_served(app_client):
     r = app_client.get("/")
-    assert r.status_code == 200 and "Yesrule" in r.text and "/v1/requests" in r.text
+    assert r.status_code == 200 and "Yesrule" in r.text

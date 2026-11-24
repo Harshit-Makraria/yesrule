@@ -1,7 +1,7 @@
 # docker compose up  →  dashboard and API at http://localhost:8787
 services:
   yesrule:
-    build: ./engine
+    build: .
     ports: ["8787:8787"]
     volumes: ["yesrule-data:/data"]
     environment:

@@ -1,0 +1,11 @@
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.db
+.git
+.env
+engine/src/yesrule/web/dist
+dashboard/test-results
+dashboard/playwright-report
+integrations
+docs

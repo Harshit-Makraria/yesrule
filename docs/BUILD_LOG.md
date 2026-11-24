@@ -263,3 +263,21 @@ Browser `alert()` pop-ups were replaced with toasts and an inline backtest panel
 - Insights and Audit both work
 - no horizontal scroll at 390 px wide
 - no JavaScript errors (a missing favicon 404 was found and fixed)
+
+## Step 13: Dashboard rebuilt as a React + TypeScript app
+
+**Why:** the single HTML file worked, but it was hard to grow: no types, no components, no tests below the browser level.
+
+**What changed:**
+- `dashboard/`: Vite, React 19, strict TypeScript, Tailwind CSS v4 (same design tokens as before), TanStack Query, TanStack Router and Motion.
+- **Typed API contract:** `npm run gen:api` exports FastAPI's OpenAPI schema and generates `src/api/schema.d.ts`; openapi-fetch uses it, so paths, params and bodies are checked at compile time. Generation immediately caught a real mismatch: the UI called `/flag` without the required `by` field. CI regenerates the types and fails if they differ from what's committed.
+- **Optimistic approve/deny:** the card leaves the inbox at once and comes back if the engine refuses (for example, someone already decided on Telegram).
+- **Code splitting:** each page is a lazy chunk of 2–4 KB, preloaded on hover; vendor code is split into react, tanstack and motion chunks. The largest chunk is 219 KB (68 KB gzipped); before splitting it was one 516 KB chunk.
+- **Engine:** serves `web/dist` with SPA fallback (`/rules` etc. → index.html). API paths are never swallowed, and paths are resolved and checked so they can't escape the build folder. If the dashboard isn't built, `/` explains how to build it.
+- **Docker:** multi-stage (Node builds the dashboard → slim Python runtime), running as a non-root user. CI builds the image and smoke-tests `/health`, `/inbox` and `/v1/rules`.
+
+**Tests:**
+- Engine: 66 pass, including 5 new tests for dashboard serving and path traversal.
+- Vitest: 14 pass (format helpers; the Inbox against a mocked engine: rendering, deny → POST body, empty state, engine down). The first run found that openapi-fetch captures `fetch` at import time; the client now looks `fetch` up per call.
+- Playwright: 9 pass against a real engine that the config starts on a fresh demo database. The full loop: ask → approve/deny → find rules → backtest → accept → auto-approve with receipt → "Wrong" pauses the rule. Also hard lines add/remove, insights, audit, theme persistence, and phone width with no horizontal scroll and no JS errors on all six pages.
+- Visual check: screenshots of every page in light and dark plus phone. That led to two fixes: the fact grid now uses two columns on phones, and the command block has a border in dark mode.

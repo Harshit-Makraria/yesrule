@@ -7,7 +7,8 @@ from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -97,10 +98,6 @@ def create_app(database_url: str | None = None, channels: list[Channel] | None =
             raise HTTPException(409, str(e)) from e
 
     # --- requests -------------------------------------------------------
-
-    @app.get("/", include_in_schema=False)
-    def dashboard() -> FileResponse:
-        return FileResponse(Path(__file__).parent / "web" / "index.html")
 
     @app.get("/health")
     def health() -> dict[str, Any]:
@@ -263,7 +260,34 @@ def create_app(database_url: str | None = None, channels: list[Channel] | None =
         except service.DecisionError as e:
             return {"text": str(e)}
 
+    mount_dashboard(app)
     return app
+
+
+DASHBOARD_DIR = Path(__file__).parent / "web" / "dist"
+NOT_BUILT = """<!doctype html><meta charset=utf-8><title>Yesrule</title>
+<body style="font:15px system-ui;max-width:36rem;margin:4rem auto;padding:0 1rem">
+<h1>Yesrule engine is running</h1><p>The dashboard hasn't been built yet. Run:</p>
+<pre>cd dashboard &amp;&amp; npm ci &amp;&amp; npm run build</pre>
+<p>Or use <code>docker compose up</code>, which builds it for you. The API is at <a href=/docs>/docs</a>.</p>"""
+
+
+def mount_dashboard(app: FastAPI, root: Path = DASHBOARD_DIR) -> None:
+    """Serve the built React dashboard. Unknown non-API paths fall back to index.html (client-side routing)."""
+    if (root / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> Response:
+        if path.startswith(("v1/", "health", "docs", "openapi.json")):
+            raise HTTPException(404, "not found")
+        index = root / "index.html"
+        if not index.is_file():
+            return HTMLResponse(NOT_BUILT)
+        candidate = (root / path).resolve()
+        if path and candidate.is_file() and candidate.is_relative_to(root.resolve()):
+            return FileResponse(candidate)
+        return FileResponse(index)
 
 
 app = create_app()

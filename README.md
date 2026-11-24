@@ -2,7 +2,7 @@
 
 <p align="center">
 <b>An approval layer for AI agents that learns rules from your own decisions.</b><br>
-<img alt="tests" src="https://img.shields.io/badge/tests-61%20passing-2f45ff"> <img alt="fuzz" src="https://img.shields.io/badge/property%20test-500k%20cases%2C%200%20failures-141518"> <img alt="python" src="https://img.shields.io/badge/python-3.13-141518"> <img alt="license" src="https://img.shields.io/badge/license-MIT-141518">
+<img alt="tests" src="https://img.shields.io/badge/tests-89%20passing-2f45ff"> <img alt="fuzz" src="https://img.shields.io/badge/property%20test-500k%20cases%2C%200%20failures-141518"> <img alt="python" src="https://img.shields.io/badge/python-3.13-141518"> <img alt="license" src="https://img.shields.io/badge/license-MIT-141518">
 </p>
 
 Your agents (Claude Code, n8n workflows, MCP clients, voice agents, your own Python code) ask before doing anything risky. You answer from Telegram, Slack or the web inbox. After you've said yes to the same kind of thing enough times, Yesrule **proposes a rule**, backtests it against everything you've ever denied, and, once you accept it, approves those requests for you **with a receipt** showing why.
@@ -49,13 +49,20 @@ agent ──► Yesrule ──► risk score + reasons ──► hard line?  →
 ## Quick start
 
 ```bash
-cd engine && uv sync
-uv run yesrule demo          # 30 days of realistic agency data
-uv run yesrule mine          # → 3 proposed rules with evidence
-uv run yesrule serve         # dashboard + API on http://localhost:8787
+docker compose up            # builds the dashboard + engine → http://localhost:8787
 ```
 
-Or `docker compose up`.
+Or run it from source:
+
+```bash
+cd dashboard && npm ci && npm run build      # React app → served by the engine
+cd ../engine && uv sync
+uv run yesrule demo          # 30 days of realistic agency data
+uv run yesrule mine          # → 3 proposed rules with evidence
+uv run yesrule serve         # dashboard + API on http://localhost:8787 (OpenAPI docs at /docs)
+```
+
+Working on the dashboard: `npm run dev` in `dashboard/` (hot reload on :5173, API proxied to the engine on :8787).
 
 ### Claude Code
 ```bash
@@ -108,13 +115,29 @@ def refund(order_id: str, value: float): ...
 - Signed Slack requests (HMAC with replay protection) and a Telegram secret token
 - Insights: automation rate, response time, time saved
 - Monthly per-client reports for agencies
-- Dashboard: Inbox, History, Rules, Hard lines, Insights, Audit
+- Dashboard: Inbox, History, Rules, Hard lines, Insights, Audit, with light/dark themes and a phone layout
+
+## Tech stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Engine | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2 | typed models end to end; SQLite by default, Postgres by URL |
+| Decisions | pure functions in `core/`, no LLM | deterministic and testable; the same input always gets the same answer |
+| Dashboard | React 19, TypeScript (strict), Vite | fast builds, code-split per page |
+| Data | TanStack Query | caching, polling, optimistic approve/deny with rollback |
+| Routing | TanStack Router | type-safe routes, lazy pages preloaded on hover |
+| API types | openapi-typescript + openapi-fetch | generated from FastAPI's OpenAPI schema; CI fails if they drift |
+| Styling | Tailwind CSS v4 design tokens, Motion | one token set for light and dark themes; layout animations |
+| Tests | pytest, a 500k-case property test, Vitest + Testing Library, Playwright | unit → property → component → real browser |
+| Ship | multi-stage Docker (Node build → Python runtime, non-root), GitHub Actions | |
 
 ## Testing
 
 | Suite | What it checks |
 |---|---|
-| `engine/tests` (61 tests) | unit, API and end-to-end loops: learning, the Telegram and Slack webhooks, the hook, the installer, MCP and the importer |
+| `engine/tests` (66 tests) | unit, API and end-to-end loops: learning, the Telegram and Slack webhooks, the hook, the installer, MCP, the importer and dashboard serving (including path traversal) |
+| `dashboard` Vitest (14 tests) | components against a mocked engine: rendering, decisions, empty and error states, input parsing |
+| `dashboard` Playwright (9 tests) | the real UI against a real engine: ask → decide → learn → accept → auto-approve → flag pauses the rule, plus hard lines, theme and phone width |
 | `engine/stress/fuzz.py` | **500,000 randomised cases** per run, checked against safety invariants (below) |
 | `integrations/n8n-nodes-yesrule` | type-checks against real `n8n-workflow` types, plus logic tests |
 
@@ -142,8 +165,11 @@ The harness was itself verified by **planting bugs** in a scratch copy of the en
 engine/                     Python 3.13 · FastAPI · SQLAlchemy · Pydantic
   src/yesrule/core/         pure decision logic (risk, rules, miner, audit, redact)
   src/yesrule/adapters/     Claude Code hook, MCP server
-  src/yesrule/web/          dashboard (served by the engine)
   stress/fuzz.py            500k-case property test
+dashboard/                  React 19 · TypeScript · Vite · Tailwind v4 · TanStack Query/Router
+  src/api/                  generated OpenAPI types, typed client, query hooks
+  src/routes/               one lazy-loaded page per section
+  e2e/                      Playwright tests (start their own engine)
 integrations/n8n-nodes-yesrule/   n8n community node (TypeScript)
 docs/OVERVIEW.md · docs/BUILD_LOG.md
 ```

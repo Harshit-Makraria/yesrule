@@ -4,7 +4,7 @@ version = "0.2.0"
 description = "Approval layer for AI agents that learns rules from your decisions, with receipts."
 readme = "README.md"
 authors = [
-    { name = "Harshit Makraria", email = "harshitmakraria9@gmail.com" }
+    { name = "Harshit Makraria" }
 ]
 requires-python = ">=3.13"
 dependencies = [

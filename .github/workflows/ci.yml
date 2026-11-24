@@ -11,6 +11,26 @@ jobs:
       - run: uv run ruff check src tests
       - run: uv run pytest -q
       - run: uv run python stress/fuzz.py --cases 100000 --seed ${{ github.run_number }}
+  dashboard:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: dashboard } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: dashboard/package-lock.json }
+      - uses: astral-sh/setup-uv@v6
+      - run: npm ci
+      - run: npm run gen:api && git diff --exit-code src/api/schema.d.ts # API types match the engine
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+        env: { CI: "1" }
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-traces, path: dashboard/test-results }
   n8n-node:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: integrations/n8n-nodes-yesrule } }
@@ -24,4 +44,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t yesrule ./engine
+      - run: docker build -t yesrule .
+      - name: Smoke test the image
+        run: |
+          docker run -d --name yr -p 8787:8787 yesrule
+          for i in $(seq 1 30); do curl -fs localhost:8787/health && break; sleep 1; done
+          curl -fs localhost:8787/inbox | grep -q 'id="root"'
+          curl -fs localhost:8787/v1/rules
