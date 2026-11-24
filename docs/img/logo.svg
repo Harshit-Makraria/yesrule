@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="140" viewBox="0 0 520 140" role="img" aria-label="Yesrule">
+  <style>
+    .ink { fill: #141518; } .paper { fill: #f0ede6; } .word { fill: #141518; } .tag { fill: #5b5d63; }
+    @media (prefers-color-scheme: dark) { .word { fill: #f0ede6; } .tag { fill: #a4a6ad; } }
+  </style>
+  <rect x="10" y="20" width="100" height="100" rx="24" class="ink"/>
+  <path d="M36 72 L54 90 L86 52" fill="none" stroke="#f0ede6" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="94" cy="36" r="9" fill="#2f45ff"/>
+  <text x="134" y="84" class="word" font-family="Geist, Inter, -apple-system, Segoe UI, sans-serif" font-size="58" font-weight="600" letter-spacing="-2">Yesrule</text>
+  <text x="136" y="114" class="tag" font-family="Georgia, 'Instrument Serif', serif" font-style="italic" font-size="20">approvals that learn from your yeses</text>
+</svg>

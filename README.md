@@ -1,8 +1,30 @@
-# Yesrule
+<p align="center"><img src="docs/img/logo.svg" alt="Yesrule" width="420"></p>
 
-**An approval layer for AI agents that learns rules from your own decisions.**
+<p align="center">
+<b>An approval layer for AI agents that learns rules from your own decisions.</b><br>
+<img alt="tests" src="https://img.shields.io/badge/tests-61%20passing-2f45ff"> <img alt="fuzz" src="https://img.shields.io/badge/property%20test-500k%20cases%2C%200%20failures-141518"> <img alt="python" src="https://img.shields.io/badge/python-3.13-141518"> <img alt="license" src="https://img.shields.io/badge/license-MIT-141518">
+</p>
 
 Your agents (Claude Code, n8n workflows, MCP clients, voice agents, your own Python code) ask before doing anything risky. You answer from Telegram, Slack or the web inbox. After you've said yes to the same kind of thing enough times, Yesrule **proposes a rule**, backtests it against everything you've ever denied, and, once you accept it, approves those requests for you **with a receipt** showing why.
+
+<p align="center"><img src="docs/img/rules.png" alt="Rules learned from your decisions" width="860"></p>
+
+## How it works, in one story
+
+1. **Your agent wants to act.** An n8n workflow is about to email a €1,200 invoice to `billing@acme-dental.com`. Instead of sending, it calls Yesrule (`POST /v1/requests`).
+2. **Yesrule scores the risk** with plain reasons: amount, new vs known recipient, irreversible, production. No LLM in this path, so the same input always gets the same answer.
+3. **It checks your rules in a fixed order.** Hard lines and high risk always go to a person; no learned rule can override them.
+4. **No rule matches yet, so it asks you.** Your phone buzzes on Telegram or Slack with Approve and Deny buttons, and the request also appears in the web inbox. Secrets are redacted before anything leaves the server.
+5. **You tap Approve.** The workflow continues down its *Approved* branch. Your decision is written to a hash-chained audit log.
+6. **After a few weeks of the same yes,** the miner notices 61 approvals, 0 denials over 25 days. It proposes *"send_email on n8n for acme-dental, amount ≤ 1,795"* and backtests it against every past denial.
+7. **You press Accept.** From now on those invoices go through on their own, each with a receipt: *approved by R-1, based on 61 of your approvals, accepted by you on …*
+8. **If it ever gets one wrong,** click *Wrong* on the receipt. The rule pauses immediately and your correction counts as a denial.
+
+The result: you stop answering the same question 60 times, and you never hand over the risky ones.
+
+| Inbox | History with receipts | Phone |
+|---|---|---|
+| <img src="docs/img/inbox.png" width="300"> | <img src="docs/img/history.png" width="300"> | <img src="docs/img/mobile.png" width="140"> |
 
 ```
 agent ──► Yesrule ──► risk score + reasons ──► hard line?  → ask a person
