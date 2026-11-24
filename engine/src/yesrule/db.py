@@ -43,6 +43,7 @@ class RequestRow(Base):
     status: Mapped[str] = mapped_column(String(20), index=True)  # pending|approved|denied|expired|auto_*
     verdict_reason: Mapped[str] = mapped_column(Text)
     rule_id: Mapped[str | None] = mapped_column(String(32))
+    approvals_needed: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

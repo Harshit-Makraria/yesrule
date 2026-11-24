@@ -57,3 +57,4 @@ class ApprovalRequest(BaseModel):
     context: dict[str, Any] = Field(default_factory=dict)
     fallback: str | None = None  # what the agent does if denied or timed out
     timeout_s: int = Field(default=600, ge=5, le=86_400)
+    approvals_needed: int = Field(default=1, ge=1, le=5)  # two-person rule for sensitive actions
