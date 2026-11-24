@@ -97,9 +97,70 @@ Each entry stores the SHA-256 hash of (sequence, event, data, timestamp, previou
 
 ---
 
+## Step 4: Database (2026-11-24)
+
+### `db.py`
+SQLAlchemy 2 tables. SQLite by default (`yesrule.db`), Postgres by setting `YESRULE_DATABASE_URL`.
+
+| Table | Holds |
+|---|---|
+| `requests` | the full request (JSON), risk score, band and reasons, status (`pending`, `approved`, `denied`, `expired`, `auto_approved`, `auto_denied`), verdict reason, matching rule, expiry |
+| `decisions` | who decided (a person, `rule:R-7`, or a timeout), approve or deny, channel, response time, and **`human` true/false**. Only human decisions train the miner, so the system never learns from its own auto-approvals. |
+| `rules` | conditions (JSON), effect, status, evidence, who accepted it, how often it fired |
+| `hard_lines` | conditions that always go to a human |
+| `audit_log` | the hash chain |
+
+---
+
+## Step 5: Service layer and HTTP API (2026-11-24)
+
+### `service.py`: connects the pure core to the database
+- `create_request`: loads rules and hard lines → `assess()` → `decide()` → saves the request → if a rule fired, records an automatic decision and bumps the rule's fire count → writes an audit entry.
+- `record_decision`: **first decision wins** (a second answer gets `409`), rejects expired requests, records response time, writes an audit entry.
+- `expire_overdue`: marks pending requests past their deadline as `expired`.
+- `propose_rules`: runs the miner on **human decisions only**, skips rules that already exist, saves proposals as `proposed`.
+- `set_rule_status`: accept, pause or dismiss, recording who did it.
+- `verify_audit`: re-checks the whole hash chain.
+
+### `api.py`: FastAPI endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/health` | liveness |
+| POST | `/v1/requests` | an agent asks for approval → returns status, risk, reasons and (if auto-approved) the **receipt** |
+| GET | `/v1/requests/{id}` | adapters poll for the decision |
+| GET | `/v1/requests?status=pending` | inbox |
+| POST | `/v1/requests/{id}/decision` | approve or deny |
+| GET | `/v1/rules` | all rules with evidence |
+| POST | `/v1/rules/mine` | run rule learning now (`min_confidence` adjustable) |
+| POST | `/v1/rules/{id}/accept\|pause\|dismiss` | manage a rule |
+| GET | `/v1/audit/verify` | check the audit chain |
+
+Interactive API docs are generated automatically at `/docs`.
+
+**Receipt example** (returned on an auto-approval):
+```json
+{"rule": "R-1", "description": "send_email on n8n for acme",
+ "evidence": {"approvals": 40, "denials": 0, "days": 4, "wilson_lower_bound": 0.912, "backtest_matched_denials": 0},
+ "accepted_by": "harshit"}
+```
+
+**Problems hit and fixed:**
+- Decision timestamps came from a database default, so tests couldn't simulate approvals over several days. They're now set explicitly.
+- In the learning-loop test, approved invoices were ₹30,000–₹33,900, and the test then expected ₹35,000 to auto-approve. It correctly didn't, because the rule caps at the largest approved amount. The test was wrong, not the code. It now checks both sides: ₹32,000 auto-approves, ₹35,000 asks a human.
+- FastAPI couldn't resolve a dependency alias under postponed annotations (`422` errors). Removed `from __future__ import annotations` from `api.py`.
+
+**Live smoke test:** started the server with `uvicorn yesrule.api:app` and sent a Claude Code `npm publish` request. Result: risk 75 (high), reasons "irreversible action", "production environment" and "destructive or publishing action", status `pending`, audit chain verified.
+
+---
+
 ## Tests so far
 
-`uv run pytest`: **25 passed**. `uv run ruff check`: clean.
+`uv run pytest`: **30 passed**. `uv run ruff check`: clean.
+
+| File | What it checks |
+|---|---|
+| `tests/test_api.py` (5) | new requests wait for a human with reasons; first decision wins; **the full loop**: 40 human approvals over 4 days → rule proposed → does nothing until accepted → accepted → next request auto-approved with a receipt naming the rule and who accepted it → amounts above the learned cap still ask a human; audit verify detects direct database tampering; expired requests can't be approved |
 
 | File | What it checks |
 |---|---|
@@ -110,6 +171,6 @@ Each entry stores the SHA-256 hash of (sequence, event, data, timestamp, previou
 
 ## Next
 
-- Step 4: database (SQLAlchemy models for requests, decisions, rules, hard lines and the audit log)
-- Step 5: FastAPI endpoints (create a request, decide, list pending, rules, audit verify)
-- Step 6: Claude Code PreToolUse hook + installer
+- Step 6: Claude Code PreToolUse hook + installer (`--dry-run`, `--remove`)
+- Step 7: Telegram channel with Approve/Deny buttons
+- Step 8: basic web inbox
