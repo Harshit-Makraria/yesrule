@@ -239,3 +239,27 @@ Removing only one of the miner's two checks is caught by neither, which is corre
 | n8n node tests | **3 passed**, type-checks against n8n |
 | Property test | **1,000,000 cases (2 × 500k), 0 failures** |
 | Mutation check | 7/7 planted bugs caught |
+
+## Step 12: Real-world check + UI redesign (2026-11-24)
+
+**Redesign** to match the portfolio's design system, using the tokens from `Portfolio/src/app/globals.css`:
+- warm paper `#f0ede6` and ink `#141518`, with cobalt `#2f45ff` as the brand colour
+- a live-green status dot
+- Geist and Geist Mono, with Instrument Serif italic headings and numbers
+- dotted-grid hero, ink panels, soft card shadows, eyebrow labels
+- light and dark themes, plus a toggle
+
+Browser `alert()` pop-ups were replaced with toasts and an inline backtest panel. Command previews are shown in a terminal-style block, risk factors as chips, evidence as a grid, and agent volume as bars on the Insights tab. On phones, the tabs move to their own scrollable row.
+
+**Real browser test** (`e2e/dashboard.e2e.js`, headless Chrome through puppeteer-core, against a live server with demo data). All 15 checks passed:
+- the inbox shows both requests
+- Approve and Deny work and are stored in the database
+- History works
+- "Find rules now" proposes rules
+- Accept turns a rule on
+- the next invoice is auto-approved with a receipt (R-1, 61 approvals)
+- "Wrong" pauses the rule
+- a hard line can be added from the form
+- Insights and Audit both work
+- no horizontal scroll at 390 px wide
+- no JavaScript errors (a missing favicon 404 was found and fixed)

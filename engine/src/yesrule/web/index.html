@@ -4,78 +4,317 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yesrule</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141518'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='%23f0ede6' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f7f5;--card:#fff;--ink:#1b1b1a;--muted:#6b6b66;--line:#e6e5e0;--ok:#1f7a4d;--okbg:#e6f4ec;--bad:#b42318;--badbg:#fdecea;--warn:#9a6700;--warnbg:#fff4d6;--accent:#3346d3}
-@media (prefers-color-scheme:dark){:root{--bg:#121211;--card:#1c1c1a;--ink:#ecebe6;--muted:#9b9a93;--line:#2e2d2a;--okbg:#12301f;--badbg:#3a1512;--warnbg:#33290d;--accent:#8c9bff}}
-*{box-sizing:border-box}body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
-header{display:flex;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;flex-wrap:wrap}
-header b{font-size:16px}nav{display:flex;gap:4px;flex-wrap:wrap}nav button{border:0;background:none;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
-nav button.on{background:var(--bg);color:var(--ink);font-weight:600}.badge{background:var(--bad);color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-left:4px}
-main{max-width:1100px;margin:0 auto;padding:20px 16px}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:200px}.muted{color:var(--muted)}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
-.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600}.low{background:var(--okbg);color:var(--ok)}.medium{background:var(--warnbg);color:var(--warn)}.high{background:var(--badbg);color:var(--bad)}
-.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:7px;cursor:pointer;font:inherit}.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}.btn.bad{color:var(--bad)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.stat b{display:block;font-size:24px}
-table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:500;font-size:12px}
-.empty{text-align:center;padding:40px;color:var(--muted)}input,select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
-.scroll{overflow-x:auto}
+:root{
+  color-scheme:light;
+  --bg:#f0ede6;--fg:#141518;--card:#f8f6f2;--muted:#e6e2da;--mfg:#53565d;--subtle:#61646b;
+  --border:rgb(20 21 24/.1);--input:rgb(20 21 24/.15);--ring:rgb(47 69 255/.45);
+  --brand:#2f45ff;--brand-fg:#fff;--live:#12a150;--warn:#a86a00;--bad:#c9341f;
+  --live-bg:rgb(18 161 80/.1);--warn-bg:rgb(168 106 0/.1);--bad-bg:rgb(201 52 31/.09);--brand-bg:rgb(47 69 255/.08);
+  --ink:#111215;--ink-fg:#edebe6;--ink-muted:#9a9ca3;--ink-border:rgb(255 255 255/.09);
+  --shadow-card:0 1px 2px rgb(20 21 24/.04),0 8px 24px -12px rgb(20 21 24/.1);
+  --shadow-float:0 1px 2px rgb(20 21 24/.06),0 16px 40px -16px rgb(20 21 24/.22);
+  --ease:cubic-bezier(.22,1,.36,1);--r:.75rem;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  color-scheme:dark;--bg:#0b0c0e;--fg:#edebe6;--card:#131417;--muted:#1a1b1f;--mfg:#a3a5ab;--subtle:#85878e;
+  --border:rgb(255 255 255/.08);--input:rgb(255 255 255/.12);--ring:rgb(124 139 255/.5);
+  --brand:#7c8bff;--brand-fg:#0b0c0e;--live:#34d27b;--warn:#e0a83a;--bad:#ff7a66;
+  --live-bg:rgb(52 210 123/.12);--warn-bg:rgb(224 168 58/.12);--bad-bg:rgb(255 122 102/.12);--brand-bg:rgb(124 139 255/.12);
+  --ink:#121316;--shadow-card:0 1px 2px rgb(0 0 0/.3),0 8px 24px -12px rgb(0 0 0/.5);--shadow-float:0 16px 40px -16px rgb(0 0 0/.7)}}
+:root[data-theme=dark]{
+  color-scheme:dark;--bg:#0b0c0e;--fg:#edebe6;--card:#131417;--muted:#1a1b1f;--mfg:#a3a5ab;--subtle:#85878e;
+  --border:rgb(255 255 255/.08);--input:rgb(255 255 255/.12);--ring:rgb(124 139 255/.5);
+  --brand:#7c8bff;--brand-fg:#0b0c0e;--live:#34d27b;--warn:#e0a83a;--bad:#ff7a66;
+  --live-bg:rgb(52 210 123/.12);--warn-bg:rgb(224 168 58/.12);--bad-bg:rgb(255 122 102/.12);--brand-bg:rgb(124 139 255/.12);
+  --ink:#121316;--shadow-card:0 1px 2px rgb(0 0 0/.3),0 8px 24px -12px rgb(0 0 0/.5);--shadow-float:0 16px 40px -16px rgb(0 0 0/.7)}
+*{box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 Geist,ui-sans-serif,system-ui,sans-serif;font-feature-settings:"ss01","cv11";-webkit-font-smoothing:antialiased;min-height:100vh}
+.mono{font-family:"Geist Mono",ui-monospace,Menlo,monospace}
+.serif{font-family:"Instrument Serif",ui-serif,Georgia,serif;font-style:italic;letter-spacing:-.02em;font-weight:400}
+.shell{width:100%;max-width:76rem;margin-inline:auto;padding-inline:1.25rem}
+@media(min-width:40rem){.shell{padding-inline:2rem}}
+.dots{background-image:radial-gradient(circle at 1px 1px,color-mix(in oklab,var(--fg) 14%,transparent) 1px,transparent 0);background-size:22px 22px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:10;background:color-mix(in oklab,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.top .shell{display:flex;align-items:center;gap:1.25rem;height:60px}
+.logo{display:flex;align-items:center;gap:.55rem;font-weight:600;letter-spacing:-.01em;font-size:15px}
+.mark{width:22px;height:22px;border-radius:6px;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-size:13px}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:none;color:var(--mfg);padding:.4rem .7rem;border-radius:999px;cursor:pointer;white-space:nowrap;font-size:13.5px;transition:background .2s var(--ease),color .2s}
+.tab:hover{color:var(--fg)}
+.tab[aria-current=page]{background:var(--fg);color:var(--bg)}
+.count{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:var(--brand-fg);font-size:11px;margin-left:6px;font-weight:600}
+.status{display:flex;align-items:center;gap:.5rem;font-size:12px;color:var(--mfg);white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--live);box-shadow:0 0 0 3px var(--live-bg)}
+.dot.bad{background:var(--bad);box-shadow:0 0 0 3px var(--bad-bg)}
+.theme{border:1px solid var(--border);background:var(--card);border-radius:999px;width:32px;height:32px;cursor:pointer;display:grid;place-items:center}
+@media(max-width:720px){.status span:last-child{display:none}.top .shell{gap:.75rem;height:auto;flex-wrap:wrap;padding-block:.7rem}
+  .logo{flex:1}.tabs{order:3;flex-basis:100%;padding-bottom:.1rem;mask-image:linear-gradient(90deg,#000 88%,transparent)}}
+
+/* page header */
+.hero{border-bottom:1px solid var(--border)}
+.hero .shell{padding-block:2.4rem 1.8rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+.eyebrow{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);display:flex;align-items:center;gap:.5rem}
+.eyebrow::before{content:"";width:14px;height:1px;background:currentColor}
+h1{margin:.5rem 0 0;font-family:"Instrument Serif",serif;font-weight:400;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1;letter-spacing:-.025em}
+h1 em{color:var(--brand)}
+.lede{color:var(--mfg);max-width:34rem;margin:.75rem 0 0;font-size:14.5px}
+main .shell{padding-block:1.75rem 4rem}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-card);padding:1.15rem 1.25rem}
+.stack>*+*{margin-top:.85rem}
+.req{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem 1.5rem;animation:in .5s var(--ease) both}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.req h3{margin:0;font-size:15px;font-weight:500;letter-spacing:-.01em}
+.req h3 b{font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem .9rem;color:var(--subtle);font-size:12.5px;margin-top:.3rem}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-top:.9rem}
+.fact{border:1px solid var(--border);border-radius:calc(var(--r)*.8);padding:.55rem .7rem;background:var(--bg)}
+.fact dt{font-size:11px;color:var(--subtle);font-family:"Geist Mono",monospace;text-transform:uppercase;letter-spacing:.06em}
+.fact dd{margin:.1rem 0 0;font-weight:500;overflow-wrap:anywhere}
+.cmd{margin-top:.9rem;background:var(--ink);color:var(--ink-fg);border-radius:calc(var(--r)*.8);padding:.7rem .9rem;font-family:"Geist Mono",monospace;font-size:12.5px;overflow-x:auto;white-space:pre}
+.cmd::before{content:"$ ";color:var(--ink-muted)}
+.why{margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--border);border-radius:999px;padding:.15rem .6rem;font-size:12px;color:var(--mfg);background:var(--card)}
+.chip b{color:var(--fg);font-weight:500}
+.actions{display:flex;flex-direction:column;gap:.5rem;align-items:stretch;min-width:132px}
+@media(max-width:640px){.req{grid-template-columns:1fr}.actions{flex-direction:row}.actions .btn{flex:1}}
+
+/* risk */
+.risk{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.12rem .55rem;font-size:12px;font-weight:500;font-family:"Geist Mono",monospace}
+.risk::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.risk.low{color:var(--live);background:var(--live-bg)}.risk.medium{color:var(--warn);background:var(--warn-bg)}.risk.high{color:var(--bad);background:var(--bad-bg)}
+.st{font-size:12px;font-weight:500;border-radius:6px;padding:.1rem .45rem;white-space:nowrap}
+.st.approved,.st.auto_approved,.st.active{color:var(--live);background:var(--live-bg)}
+.st.denied,.st.auto_denied,.st.flagged,.st.expired{color:var(--bad);background:var(--bad-bg)}
+.st.proposed,.st.pending{color:var(--brand);background:var(--brand-bg)}
+.st.paused{color:var(--warn);background:var(--warn-bg)}
+
+/* buttons */
+.btn{border:1px solid var(--border);background:var(--card);border-radius:999px;padding:.5rem 1rem;cursor:pointer;font-weight:500;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;transition:transform .15s var(--ease),background .2s,border-color .2s}
+.btn:hover{border-color:var(--input)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.brand{background:var(--brand);color:var(--brand-fg);border-color:var(--brand)}
+.btn.danger{color:var(--bad)}
+.btn.danger:hover{background:var(--bad-bg);border-color:transparent}
+.btn.sm{padding:.3rem .75rem;font-size:12.5px}
+.btn[disabled]{opacity:.5;pointer-events:none}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));border-block:1px solid var(--border)}
+.stat{padding:1.4rem 1.5rem 1.4rem 0}
+.stat+.stat{border-left:1px solid var(--border);padding-left:1.5rem}
+@media(max-width:640px){.stat+.stat{border-left:0;padding-left:0;border-top:1px solid var(--border)}}
+.stat dd{margin:0;font-size:2.8rem;line-height:1}
+.stat dd small{font-size:.5em;color:var(--brand)}
+.stat dt{color:var(--mfg);font-size:13px;margin-top:.55rem}
+
+/* tables */
+.table-wrap{overflow-x:auto;padding:0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle);font-weight:500;text-align:left;padding:.8rem 1.25rem;border-bottom:1px solid var(--border);white-space:nowrap}
+td{white-space:nowrap;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:color-mix(in oklab,var(--muted) 45%,transparent)}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+
+/* rules */
+.rule{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem}
+.rule-id{font-family:"Geist Mono",monospace;font-size:12px;color:var(--subtle)}
+.rule h3{margin:.15rem 0 0;font-size:16px;font-weight:500;letter-spacing:-.01em}
+.conds{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.8rem}
+.cond{font-family:"Geist Mono",monospace;font-size:11.5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.15rem .5rem}
+.cond i{font-style:normal;color:var(--brand)}
+.evidence{margin-top:.9rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:calc(var(--r)*.8);overflow:hidden}
+.evidence div{background:var(--card);padding:.55rem .75rem}
+.evidence b{display:block;font-family:"Instrument Serif",serif;font-style:italic;font-weight:400;font-size:1.6rem;line-height:1.1}
+.evidence span{font-size:11.5px;color:var(--subtle)}
+.bt{margin-top:.8rem;background:var(--ink);color:var(--ink-fg);border-radius:calc(var(--r)*.8);padding:.8rem 1rem;font-size:13px;display:flex;gap:1.25rem;flex-wrap:wrap;align-items:center}
+.bt .k{color:var(--ink-muted);font-size:11px;font-family:"Geist Mono",monospace;text-transform:uppercase;letter-spacing:.06em}
+.bt .pass{color:#34d27b}.bt .fail{color:#ff7a66}
+.rule .actions{min-width:120px}
+@media(max-width:640px){.rule{grid-template-columns:1fr}.rule .actions{flex-direction:row;flex-wrap:wrap}}
+
+/* toolbar + forms */
+.toolbar{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:3px;background:var(--card)}
+.seg button{border:0;background:none;padding:.3rem .8rem;border-radius:999px;cursor:pointer;color:var(--mfg);font-size:12.5px}
+.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.form{display:grid;grid-template-columns:1.3fr .7fr 1fr 1.6fr auto;gap:.5rem;margin-top:1rem}
+@media(max-width:760px){.form{grid-template-columns:1fr 1fr}.form .btn{grid-column:1/-1}}
+input,select{border:1px solid var(--input);background:var(--bg);border-radius:calc(var(--r)*.7);padding:.5rem .7rem;min-width:0;width:100%}
+input::placeholder{color:var(--subtle)}
+
+/* ink panel (system) */
+.ink{background:var(--ink);color:var(--ink-fg);border-radius:var(--r);padding:1.25rem 1.4rem;box-shadow:var(--shadow-float);position:relative;overflow:hidden}
+.ink .eyebrow{color:var(--ink-muted)}
+.ink h2{margin:.5rem 0 0;font-family:"Instrument Serif",serif;font-weight:400;font-size:1.9rem;line-height:1.1;letter-spacing:-.02em}
+.ink p{color:var(--ink-muted);margin:.5rem 0 0;max-width:40rem}
+.ink .mono{color:var(--ink-muted)}
+.hash{font-family:"Geist Mono",monospace;font-size:11.5px;color:var(--subtle)}
+.chain{display:inline-flex;align-items:center;gap:.25rem}
+.chain::after{content:"↳";color:var(--subtle);margin-left:.2rem}
+
+/* empty */
+.empty{text-align:center;padding:3.5rem 1.5rem;border:1px dashed var(--input);border-radius:var(--r);background:color-mix(in oklab,var(--card) 60%,transparent)}
+.empty .serif{font-size:2rem;line-height:1.1}
+.empty p{color:var(--mfg);margin:.5rem auto 0;max-width:28rem}
+
+/* skeleton */
+.sk{height:110px;border-radius:var(--r);background:linear-gradient(90deg,var(--muted),color-mix(in oklab,var(--muted) 50%,var(--card)),var(--muted));background-size:200% 100%;animation:sh 1.2s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* toasts */
+#toasts{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none;width:min(92vw,420px)}
+.toast{background:var(--ink);color:var(--ink-fg);border:1px solid var(--ink-border);padding:.65rem 1rem;border-radius:999px;box-shadow:var(--shadow-float);font-size:13px;animation:in .35s var(--ease) both;display:flex;gap:.5rem;align-items:center}
+.toast.err{background:var(--bad);color:#fff}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<header><b>✅ Yesrule</b>
-<nav id="nav"></nav><span class="grow"></span><span id="chain" class="muted mono"></span></header>
-<main id="view"></main>
+<header class="top"><div class="shell">
+  <div class="logo"><span class="mark">✓</span>Yesrule</div>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <div class="status" id="status"><span class="dot"></span><span>connecting…</span></div>
+  <button class="theme" id="theme" aria-label="Toggle theme" title="Toggle theme">◐</button>
+</div></header>
+<section class="hero dots"><div class="shell" id="hero"></div></section>
+<main><div class="shell" id="view"></div></main>
+<div id="toasts" role="status" aria-live="polite"></div>
 <script>
-const TABS=[["inbox","Inbox"],["history","History"],["rules","Rules"],["lines","Hard lines"],["insights","Insights"],["audit","Audit"]];
-let tab=(location.hash||"#inbox").slice(1);
-const $=s=>document.querySelector(s);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const api=async(p,o={})=>{const r=await fetch(p,{headers:{"content-type":"application/json"},...o});if(!r.ok)throw new Error((await r.json()).detail||r.status);return r.json()};
-const band=(b,s)=>`<span class="pill ${esc(b)}">${esc(s??b)}</span>`;
-const ago=t=>{const s=(Date.now()-new Date(t))/1000;return s<60?`${s|0}s ago`:s<3600?`${s/60|0}m ago`:s<86400?`${s/3600|0}h ago`:`${s/86400|0}d ago`};
-async function nav(){const p=await api("/v1/requests?status=pending").catch(()=>[]);
-$("#nav").innerHTML=TABS.map(([k,l])=>`<button class="${k==tab?"on":""}" onclick="go('${k}')">${l}${k=="inbox"&&p.length?`<span class="badge">${p.length}</span>`:""}</button>`).join("");
-const a=await api("/v1/audit/verify").catch(()=>null);$("#chain").textContent=a?(a.ok?`audit chain OK · ${a.entries} entries`:`⚠ audit chain broken at #${a.first_bad_seq}`):"engine offline"}
-function go(k){tab=k;location.hash=k;render()}
-async function decide(id,ok){try{await api(`/v1/requests/${id}/decision`,{method:"POST",body:JSON.stringify({approved:ok,by:"owner",channel:"web"})})}catch(e){alert(e.message)}render()}
-async function ruleAct(id,a){await api(`/v1/rules/${id}/${a}`,{method:"POST"});render()}
-async function flag(id){await api(`/v1/requests/${id}/flag`,{method:"POST",body:"{}"}).catch(e=>alert(e.message));render()}
-async function mine(){const r=await api("/v1/rules/mine?min_confidence="+$("#conf").value,{method:"POST"});render();setTimeout(()=>alert(r.length?`${r.length} new rule(s) proposed`:"No new rules yet. More consistent decisions needed."),50)}
-async function backtest(id){const r=await api(`/v1/rules/${id}/backtest`);alert(`Against ${r.history_size} past decisions:\nwould auto-approve ${r.would_auto_approve}\nwould have approved ${r.matched_past_denials} that you denied\n${r.passed?"PASSED":"FAILED"}`)}
-async function addLine(){const f=$("#lf").value,o=$("#lo").value;let v=$("#lv").value;if(v==="true")v=true;else if(v==="false")v=false;else if(v!==""&&!isNaN(v))v=Number(v);
-await api("/v1/hard-lines",{method:"POST",body:JSON.stringify({id:"H-"+Date.now().toString(36),description:$("#ld").value||`${f} ${o} ${v}`,conditions:[{field:f,op:o,value:v}]})}).catch(e=>alert(e.message));render()}
-async function delLine(id){await api("/v1/hard-lines/"+id,{method:"DELETE"});render()}
+const TABS={inbox:["Inbox","Waiting on <em>you</em>","Requests your agents can't do alone. Approve or deny here, or from Telegram and Slack."],
+history:["History","Every <em>decision</em>","What your agents asked for, who answered, and which rule handled it. Mark any automatic approval as wrong."],
+rules:["Rules","Learned from <em>your yeses</em>","Patterns in your own decisions, backtested against everything you've denied. Nothing runs until you accept it."],
+lines:["Hard lines","Always <em>ask</em>","Conditions that always go to a person, whatever the rules say."],
+insights:["Insights","Attention <em>saved</em>","How much of the approval load your rules are carrying."],
+audit:["Audit","Tamper-<em>evident</em>","Each entry carries the hash of the one before it. Edit or delete anything and the chain breaks."]};
+let tab=(location.hash||"#inbox").slice(1);if(!TABS[tab])tab="inbox";
+let mineConf="0.9";const backtests={};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api=async(p,o={})=>{const r=await fetch(p,{headers:{"content-type":"application/json"},...o});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||("HTTP "+r.status));return j};
+const money=(v,c="INR")=>v==null?"":new Intl.NumberFormat("en-IN",{style:"currency",currency:c,maximumFractionDigits:0}).format(v);
+const ago=t=>{const s=(Date.now()-new Date(t))/1000,a=Math.abs(s),f=a<60?`${a|0}s`:a<3600?`${a/60|0}m`:a<86400?`${a/3600|0}h`:`${a/86400|0}d`;return s>=0?f+" ago":"in "+f};
+const risk=(band,score)=>`<span class="risk ${esc(band)}">${esc(band)} · ${esc(score)}</span>`;
+const st=s=>`<span class="st ${esc(s)}">${esc(String(s).replace("_"," "))}</span>`;
+const cond=c=>`<span class="cond">${esc(c.field)} <i>${esc(c.op)}</i> ${esc(JSON.stringify(c.value))}</span>`;
+function toast(msg,err){const t=document.createElement("div");t.className="toast"+(err?" err":"");t.textContent=msg;$("#toasts").append(t);setTimeout(()=>t.remove(),3200)}
+const act=async(fn,ok)=>{try{await fn();if(ok)toast(ok)}catch(e){toast(e.message,true)}render()};
+
+/* theme */
+const applyTheme=t=>{if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme};
+try{applyTheme(localStorage.getItem("yr-theme"))}catch{}
+$("#theme").onclick=()=>{const dark=document.documentElement.dataset.theme==="dark"||(!document.documentElement.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches);const n=dark?"light":"dark";applyTheme(n);try{localStorage.setItem("yr-theme",n)}catch{}};
+
+async function chrome(){
+  const p=await api("/v1/requests?status=pending").catch(()=>null);
+  $("#tabs").innerHTML=Object.entries(TABS).map(([k,[l]])=>`<button class="tab" data-tab="${k}" ${k==tab?'aria-current="page"':""}>${l}${k=="inbox"&&p&&p.length?`<span class="count">${p.length}</span>`:""}</button>`).join("");
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab));
+  const a=await api("/v1/audit/verify").catch(()=>null);
+  $("#status").innerHTML=a?`<span class="dot ${a.ok?"":"bad"}"></span><span>${a.ok?`Chain OK · ${a.entries.toLocaleString()} entries`:`Chain broken at #${a.first_bad_seq}`}</span>`:`<span class="dot bad"></span><span>Engine offline</span>`;
+  const [l,h,d]=TABS[tab];$("#hero").innerHTML=`<div><div class="eyebrow">${l}</div><h1>${h}</h1><p class="lede">${d}</p></div><div id="heroside"></div>`;
+}
+function go(k){tab=k;history.replaceState(null,"","#"+k);render()}
+
 const V={
-async inbox(){const rs=await api("/v1/requests?status=pending");if(!rs.length)return`<div class="card empty">Nothing waiting. Agents are either idle or covered by your rules.</div>`;
-const ds=await Promise.all(rs.map(r=>api(`/v1/requests/${r.id}/detail`)));
-return ds.map(d=>{const p=d.payload,ctx=p.context||{};return`<div class="card"><div class="row"><div class="grow"><b>${esc(d.agent)}</b> wants to <b>${esc(d.action)}</b> ${band(d.risk_band,`risk ${d.risk}`)}
-<div class="muted">${esc(p.platform)}${d.client?" · client "+esc(d.client):""} · ${ago(d.created_at)} · expires ${ago(d.expires_at).replace(" ago","")}</div></div>
-<button class="btn ok" onclick="decide('${d.id}',true)">Approve</button><button class="btn bad" onclick="decide('${d.id}',false)">Deny</button></div>
-${p.amount?`<div>Amount: <b>${p.amount.value.toLocaleString()} ${esc(p.amount.currency)}</b></div>`:""}
-${p.recipient?`<div>To: ${esc(p.recipient.id)} ${p.recipient.known?"(known)":"<b>(new)</b>"}</div>`:""}
-${ctx.command?`<div class="mono">$ ${esc(ctx.command)}</div>`:""}${ctx.summary?`<div>${esc(ctx.summary)}</div>`:""}
-<div class="muted">Why: ${d.risk_reasons.map(r=>esc(r[0])+" (+"+r[1]+")").join(", ")||"no rule covers this yet"} · ${esc(d.reason)}${d.approvals_needed>1?` · needs ${d.approvals_needed} approvals`:""}</div></div>`}).join("")},
-async history(){const rs=(await api("/v1/requests?limit=300")).filter(r=>r.status!="pending");if(!rs.length)return`<div class="card empty">No decisions yet.</div>`;
-return`<div class="card scroll"><table><tr><th>When</th><th>Agent</th><th>Action</th><th>Client</th><th>Risk</th><th>Result</th><th></th></tr>${rs.map(r=>`<tr><td class="muted">${ago(r.created_at)}</td><td>${esc(r.agent)}</td><td>${esc(r.action)}${r.amount?` · ${r.amount.toLocaleString()}`:""}</td><td>${esc(r.client||"")}</td><td>${band(r.risk_band,r.risk)}</td>
-<td>${esc(r.status.replace("_"," "))}${r.rule_id?` <span class="muted mono">by ${esc(r.rule_id)}</span>`:""}</td><td>${r.status=="auto_approved"?`<button class="btn bad" onclick="flag('${r.id}')">Wrong</button>`:""}</td></tr>`).join("")}</table></div>`},
-async rules(){const rs=await api("/v1/rules");const head=`<div class="card row"><div class="grow">Rules are learned from your own decisions and only work after you accept them.</div>
-<select id="conf"><option value="0.9">Strict (≥90% confidence)</option><option value="0.8">Suggest early (≥80%)</option></select><button class="btn ok" onclick="mine()">Find rules now</button></div>`;
-if(!rs.length)return head+`<div class="card empty">No rules yet. Keep deciding and Yesrule will spot the patterns.</div>`;
-return head+rs.map(r=>{const e=r.evidence||{};return`<div class="card"><div class="row"><div class="grow"><b>${esc(r.id)}</b> · ${esc(r.description)} ${band(r.status=="active"?"low":r.status=="proposed"?"medium":"high",r.status)}</div>
-${r.status!="active"?`<button class="btn ok" onclick="ruleAct('${r.id}','accept')">Accept</button>`:`<button class="btn" onclick="ruleAct('${r.id}','pause')">Pause</button>`}
-<button class="btn" onclick="backtest('${r.id}')">Backtest</button><button class="btn bad" onclick="ruleAct('${r.id}','dismiss')">Dismiss</button></div>
-<div class="mono muted">${r.conditions.map(c=>`${esc(c.field)} ${esc(c.op)} ${esc(JSON.stringify(c.value))}`).join(" AND ")}</div>
-<div>Evidence: <b>${e.approvals??"?"}</b> approvals, ${e.denials??0} denials, over ${e.days??"?"} days · confidence ${e.wilson_lower_bound??"?"} · fired ${r.fire_count}×${r.accepted_by?` · accepted by ${esc(r.accepted_by)}`:""}</div></div>`}).join("")},
-async lines(){const ls=await api("/v1/hard-lines");return`<div class="card"><b>Hard lines</b> always go to a person, whatever the rules say.<div class="row" style="margin-top:10px">
-<input id="lf" placeholder="field e.g. amount.value"><select id="lo">${["eq","ne","gte","lte","in","contains"].map(o=>`<option>${o}</option>`).join("")}</select><input id="lv" placeholder="value"><input id="ld" class="grow" placeholder="description"><button class="btn ok" onclick="addLine()">Add</button></div></div>
-${ls.map(l=>`<div class="card row"><div class="grow"><b>${esc(l.description)}</b><div class="mono muted">${l.conditions.map(c=>`${esc(c.field)} ${esc(c.op)} ${esc(JSON.stringify(c.value))}`).join(" AND ")}</div></div><button class="btn bad" onclick="delLine('${l.id}')">Remove</button></div>`).join("")||`<div class="card empty">No hard lines yet. Try: amount.value gte 100000</div>`}`},
-async insights(){const i=await api("/v1/insights");const s=(l,v)=>`<div class="card stat"><span class="muted">${l}</span><b>${v}</b></div>`;
-return`<div class="stats">${s("Requests",i.total_requests)}${s("Handled by rules",Math.round(i.automation_rate*100)+"%")}${s("Minutes saved (est.)",i.minutes_saved_estimate)}${s("Median response",i.median_response_ms==null?"–":(i.median_response_ms/1000).toFixed(0)+"s")}${s("Active rules",i.rules.active)}${s("Proposed rules",i.rules.proposed)}</div>
-<div class="card scroll"><table><tr><th>Agent</th><th>Requests</th><th>Automatic</th><th>Denied</th></tr>${Object.entries(i.agents).map(([a,v])=>`<tr><td>${esc(a)}</td><td>${v.requests}</td><td>${v.auto}</td><td>${v.denied}</td></tr>`).join("")}</table></div>`},
-async audit(){const [v,es]=await Promise.all([api("/v1/audit/verify"),api("/v1/audit?limit=200")]);
-return`<div class="card">${v.ok?"✅ Hash chain verified":"⚠ Chain broken at entry #"+v.first_bad_seq} · ${v.entries} entries. Every entry includes the hash of the one before, so edits or deletions are detected.</div>
-<div class="card scroll"><table><tr><th>#</th><th>Event</th><th>Data</th><th>Hash</th></tr>${es.map(e=>`<tr><td>${e.seq}</td><td>${esc(e.event)}</td><td class="mono">${esc(JSON.stringify(e.data)).slice(0,160)}</td><td class="mono muted">${e.hash.slice(0,12)}…</td></tr>`).join("")}</table></div>`}};
-async function render(){await nav();try{$("#view").innerHTML=await V[tab]()}catch(e){$("#view").innerHTML=`<div class="card empty">Could not reach the engine: ${esc(e.message)}</div>`}}
-window.onhashchange=()=>{tab=(location.hash||"#inbox").slice(1);render()};render();setInterval(()=>{if(tab=="inbox"&&!document.hidden)render()},5000);
+async inbox(){
+  const rs=await api("/v1/requests?status=pending");
+  if(!rs.length)return`<div class="empty"><div class="serif">All clear.</div><p>Nothing waiting. Your agents are either idle or covered by rules you've accepted.</p></div>`;
+  const ds=await Promise.all(rs.map(r=>api(`/v1/requests/${r.id}/detail`)));
+  return`<div class="stack">${ds.map(d=>{const p=d.payload,c=p.context||{};const facts=[];
+    if(p.amount)facts.push(["Amount",money(p.amount.value,p.amount.currency)]);
+    if(p.recipient)facts.push(["Recipient",`${esc(p.recipient.id)} ${p.recipient.known?"":'<span class="st pending">new</span>'}`]);
+    if(d.client)facts.push(["Client",esc(d.client)]);
+    facts.push(["Environment",esc(p.environment)],["Reversible",p.reversible?"Yes":"<b>No</b>"]);
+    if(d.approvals_needed>1)facts.push(["Approvals",`${d.decisions.filter(x=>x.approved&&x.human).length} of ${d.approvals_needed}`]);
+    return`<article class="card req" data-req="${d.id}"><div>
+      <h3><b>${esc(d.agent)}</b> wants to <b>${esc(d.action.replaceAll("_"," "))}</b></h3>
+      <div class="meta"><span>${risk(d.risk_band,d.risk)}</span><span class="mono">${esc(p.platform)}</span><span>asked ${ago(d.created_at)}</span><span>expires ${ago(d.expires_at)}</span></div>
+      ${c.command?`<div class="cmd">${esc(c.command)}</div>`:""}${c.summary?`<p style="margin:.8rem 0 0">${esc(c.summary)}</p>`:""}
+      <dl class="facts">${facts.map(([k,v])=>`<div class="fact"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
+      <div class="why">${d.risk_reasons.map(r=>`<span class="chip">${esc(r[0])} <b>+${r[1]}</b></span>`).join("")}<span class="chip">${esc(d.reason)}</span></div>
+    </div><div class="actions">
+      <button class="btn primary" data-approve="${d.id}">Approve</button>
+      <button class="btn danger" data-deny="${d.id}">Deny</button>
+    </div></article>`}).join("")}</div>`},
+async history(){
+  const rs=(await api("/v1/requests?limit=300")).filter(r=>r.status!="pending");
+  if(!rs.length)return`<div class="empty"><div class="serif">No decisions yet.</div><p>Once your agents start asking, every answer lands here.</p></div>`;
+  return`<div class="card table-wrap"><table><thead><tr><th>When</th><th>Agent</th><th>Action</th><th>Client</th><th class="num">Amount</th><th>Risk</th><th>Result</th><th></th></tr></thead><tbody>
+  ${rs.map(r=>`<tr><td class="mono" style="color:var(--subtle);white-space:nowrap">${ago(r.created_at)}</td><td>${esc(r.agent)}</td><td>${esc(r.action.replaceAll("_"," "))}</td><td>${esc(r.client||"—")}</td><td class="num">${money(r.amount)||"—"}</td><td>${risk(r.risk_band,r.risk)}</td>
+  <td>${st(r.status)}${r.rule_id?` <span class="hash">via ${esc(r.rule_id)}</span>`:""}</td><td style="text-align:right">${r.status=="auto_approved"?`<button class="btn sm danger" data-flag="${r.id}">Wrong</button>`:""}</td></tr>`).join("")}</tbody></table></div>`},
+async rules(){
+  const rs=await api("/v1/rules");
+  const bar=`<div class="toolbar"><div class="seg" role="group" aria-label="Confidence">
+    <button data-conf="0.9" aria-pressed="${mineConf=="0.9"}">Strict · 90%</button><button data-conf="0.8" aria-pressed="${mineConf=="0.8"}">Suggest early · 80%</button></div>
+    <button class="btn brand" data-mine>Find rules now</button></div>`;
+  if(!rs.length)return bar+`<div class="empty" style="margin-top:1rem"><div class="serif">No patterns yet.</div><p>Keep deciding. After enough consistent answers over a few days, Yesrule proposes a rule with its evidence.</p></div>`;
+  const order={proposed:0,active:1,paused:2,expired:3};rs.sort((a,b)=>order[a.status]-order[b.status]);
+  return bar+`<div class="stack" style="margin-top:1rem">${rs.map(r=>{const e=r.evidence||{},bt=backtests[r.id];return`<article class="card rule" data-rule="${r.id}"><div>
+    <div class="rule-id">${esc(r.id)} · ${st(r.status)}${r.accepted_by?` · accepted by ${esc(r.accepted_by)}`:""}</div>
+    <h3>${esc(r.description)}</h3>
+    <div class="conds">${r.conditions.map(cond).join('<span class="hash">and</span>')}</div>
+    <div class="evidence"><div><b>${e.approvals??"–"}</b><span>approvals</span></div><div><b>${e.denials??0}</b><span>denials</span></div><div><b>${e.days??"–"}</b><span>days</span></div><div><b>${e.wilson_lower_bound!=null?Math.round(e.wilson_lower_bound*100)+"%":"–"}</b><span>confidence</span></div><div><b>${r.fire_count}</b><span>times fired</span></div></div>
+    ${bt?`<div class="bt"><div><div class="k">Backtest</div><b class="${bt.passed?"pass":"fail"}">${bt.passed?"Passed":"Failed"}</b></div><div><div class="k">History</div>${bt.history_size} decisions</div><div><div class="k">Would auto-approve</div>${bt.would_auto_approve}</div><div><div class="k">Past denials matched</div>${bt.matched_past_denials}</div></div>`:""}
+  </div><div class="actions">
+    ${r.status=="active"?`<button class="btn" data-pause="${r.id}">Pause</button>`:`<button class="btn primary" data-accept="${r.id}">Accept</button>`}
+    <button class="btn" data-backtest="${r.id}">Backtest</button>
+    ${r.status!="expired"?`<button class="btn danger" data-dismiss="${r.id}">Dismiss</button>`:""}
+  </div></article>`}).join("")}</div>`},
+async lines(){
+  const ls=await api("/v1/hard-lines");
+  return`<div class="card"><div class="eyebrow">New hard line</div>
+  <div class="form"><input id="lf" placeholder="field · amount.value" aria-label="Field"><select id="lo" aria-label="Operator">${["eq","ne","gte","lte","in","contains"].map(o=>`<option>${o}</option>`).join("")}</select><input id="lv" placeholder="value · 100000" aria-label="Value"><input id="ld" placeholder="description" aria-label="Description"><button class="btn primary" data-addline>Add line</button></div>
+  <p class="hash" style="margin:.7rem 0 0">Fields: action, platform, environment, client, amount.value, recipient.known, reversible, target.type</p></div>
+  <div class="stack" style="margin-top:.85rem">${ls.map(l=>`<article class="card rule"><div><div class="rule-id">${esc(l.id)}</div><h3>${esc(l.description)}</h3><div class="conds">${l.conditions.map(cond).join("")}</div></div><div class="actions"><button class="btn danger" data-delline="${esc(l.id)}">Remove</button></div></article>`).join("")||`<div class="empty"><div class="serif">No hard lines.</div><p>Try <span class="mono">amount.value gte 100000</span> so large payments always reach you.</p></div>`}</div>`},
+async insights(){
+  const i=await api("/v1/insights");
+  const stat=(v,l,s="")=>`<div class="stat"><dd class="serif">${v}${s?`<small>${s}</small>`:""}</dd><dt>${l}</dt></div>`;
+  const agents=Object.entries(i.agents).sort((a,b)=>b[1].requests-a[1].requests);const max=Math.max(1,...agents.map(([,v])=>v.requests));
+  return`<dl class="stats">${stat(i.total_requests.toLocaleString(),"requests from your agents")}${stat(Math.round(i.automation_rate*100),"handled by your rules","%")}${stat(i.minutes_saved_estimate,"minutes of attention saved","m")}${stat(i.median_response_ms==null?"–":Math.round(i.median_response_ms/1000),"median human response","s")}</dl>
+  <div class="card table-wrap" style="margin-top:1.5rem"><table><thead><tr><th>Agent</th><th>Volume</th><th class="num">Requests</th><th class="num">Automatic</th><th class="num">Denied</th></tr></thead><tbody>
+  ${agents.map(([a,v])=>`<tr><td>${esc(a)}</td><td style="width:35%"><div style="height:6px;border-radius:3px;background:var(--muted);overflow:hidden"><div style="height:100%;width:${v.requests/max*100}%;background:var(--brand)"></div></div></td><td class="num">${v.requests}</td><td class="num">${v.auto}</td><td class="num">${v.denied}</td></tr>`).join("")}</tbody></table></div>
+  <p class="hash" style="margin-top:.8rem">Rules: ${i.rules.active} active · ${i.rules.proposed} proposed · ${i.rules.paused} paused. Time saved assumes ~30s of attention per avoided prompt.</p>`},
+async audit(){
+  const [v,es]=await Promise.all([api("/v1/audit/verify"),api("/v1/audit?limit=200")]);
+  return`<div class="ink dots"><div class="eyebrow">${v.ok?"Verified":"Integrity failure"}</div><h2>${v.ok?"Hash chain verified":"Chain broken at entry #"+v.first_bad_seq}</h2><p>${v.entries.toLocaleString()} entries, each sealed with SHA-256 over its content and the previous hash. Run <span class="mono">yesrule audit verify</span> to check from the terminal.</p></div>
+  <div class="card table-wrap" style="margin-top:1rem"><table><thead><tr><th class="num">#</th><th>Event</th><th>Data</th><th>Hash</th></tr></thead><tbody>
+  ${es.map(e=>`<tr><td class="num mono">${e.seq}</td><td>${st(e.event.replace("rule_","rule "))}</td><td class="mono" style="font-size:12px;color:var(--mfg);max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(e.data))}</td><td class="hash chain">${e.hash.slice(0,10)}</td></tr>`).join("")}</tbody></table></div>`}};
+
+function wire(){
+  const on=(sel,fn)=>document.querySelectorAll(sel).forEach(el=>el.onclick=()=>fn(el));
+  on("[data-approve]",b=>act(()=>api(`/v1/requests/${b.dataset.approve}/decision`,{method:"POST",body:JSON.stringify({approved:true,by:"owner",channel:"web"})}),"Approved"));
+  on("[data-deny]",b=>act(()=>api(`/v1/requests/${b.dataset.deny}/decision`,{method:"POST",body:JSON.stringify({approved:false,by:"owner",channel:"web"})}),"Denied"));
+  on("[data-flag]",b=>act(async()=>{const r=await api(`/v1/requests/${b.dataset.flag}/flag`,{method:"POST",body:"{}"});toast(r.rule_paused?`Marked wrong · ${r.rule} paused`:"Marked wrong")}));
+  on("[data-conf]",b=>{mineConf=b.dataset.conf;render()});
+  on("[data-mine]",b=>act(async()=>{const r=await api("/v1/rules/mine?min_confidence="+mineConf,{method:"POST"});toast(r.length?`${r.length} new rule${r.length>1?"s":""} proposed`:"No new patterns yet")}));
+  on("[data-accept]",b=>act(()=>api(`/v1/rules/${b.dataset.accept}/accept`,{method:"POST"}),"Rule active"));
+  on("[data-pause]",b=>act(()=>api(`/v1/rules/${b.dataset.pause}/pause`,{method:"POST"}),"Rule paused"));
+  on("[data-dismiss]",b=>act(()=>api(`/v1/rules/${b.dataset.dismiss}/dismiss`,{method:"POST"}),"Rule dismissed"));
+  on("[data-backtest]",b=>act(async()=>{backtests[b.dataset.backtest]=await api(`/v1/rules/${b.dataset.backtest}/backtest`)}));
+  on("[data-delline]",b=>act(()=>api("/v1/hard-lines/"+encodeURIComponent(b.dataset.delline),{method:"DELETE"}),"Hard line removed"));
+  on("[data-addline]",()=>{const f=$("#lf").value.trim(),o=$("#lo").value;let v=$("#lv").value.trim();if(!f||v===""){toast("Field and value are required",true);return}
+    if(v==="true")v=true;else if(v==="false")v=false;else if(!isNaN(v))v=Number(v);else if(o==="in")v=v.split(",").map(s=>s.trim());
+    act(()=>api("/v1/hard-lines",{method:"POST",body:JSON.stringify({id:"H-"+Date.now().toString(36),description:$("#ld").value.trim()||`${f} ${o} ${JSON.stringify(v)}`,conditions:[{field:f,op:o,value:v}]})}),"Hard line added")});
+}
+let busy=false;
+async function render(){if(busy)return;busy=true;try{await chrome();if(!$("#view").innerHTML)$("#view").innerHTML='<div class="sk"></div>';
+  $("#view").innerHTML=await V[tab]();wire()}catch(e){$("#view").innerHTML=`<div class="empty"><div class="serif">Can't reach the engine.</div><p>${esc(e.message)}. Start it with <span class="mono">yesrule serve</span>.</p></div>`}finally{busy=false}}
+addEventListener("hashchange",()=>{const t=location.hash.slice(1);if(TABS[t]){tab=t;render()}});
+render();setInterval(()=>{if(tab=="inbox"&&!document.hidden&&!document.activeElement?.matches("input,select"))render()},5000);
 </script>
 </body>
 </html>
